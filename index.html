@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz App</title>
+  <style>
+    /* ===== 전체 배경 및 레이아웃 ===== */
+    body {
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #b71c1c, #2e7d32);
+      overflow: hidden;
+      position: relative;
+      font-family: 'Malgun Gothic', sans-serif;
+    }
+
+    body::before {
+      content: "";
+      position: absolute;
+      top: -100%; left: 0; right: 0; bottom: 0;
+      background-image: radial-gradient(circle, white 2px, transparent 0), radial-gradient(circle, white 4px, transparent 0);
+      background-size: 300px 300px;
+      animation: snowFall 10s linear infinite;
+    }
+
+    @keyframes snowFall {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(300px); }
+    }
+
+    /* ===== 메인 박스 ===== */
+    .main-box {
+      width: 70vw;
+      max-width: 900px;
+      background: rgba(245, 245, 245, 0.95);
+      padding: 60px 40px;
+      border-radius: 50px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      z-index: 10;
+    }
+
+    .main-box::before { content: "☃️"; position: absolute; top: -30px; left: 30px; font-size: 100px; }
+    .main-box::after { content: "🦌"; position: absolute; top: -30px; right: 30px; font-size: 100px; }
+
+    /* ===== 입력창 & 버튼 ===== */
+    .problem-box, .answer-box { display: flex; justify-content: center; gap: 30px; }
+    input {
+      width: 160px; height: 70px; background-color: #fffaf0; border: 2px solid #c62828;
+      border-radius: 15px; font-size: 48px; font-weight: bold; text-align: center; color: #c62828;
+    }
+
+    button {
+      width: 140px; height: 65px; background-color: #e53935; color: white; border: none;
+      border-radius: 15px; font-size: 28px; font-weight: bold; cursor: pointer;
+      box-shadow: 0 5px 0 #b71c1c;
+      outline: none;
+    }
+
+    /* ===== 슬롯머신 및 정답 노출 로직 (2초로 수정됨) ===== */
+
+    /* 1. 상자 흔들림 (2초로 수정) */
+    .main-box:has(button:focus) {
+      animation: waitShake 2s ease-in-out;
+    }
+
+    @keyframes waitShake {
+      0%, 100% { transform: scale(1) rotate(0); }
+      10%, 30%, 50%, 70%, 90% { transform: scale(1.02) rotate(1.5deg); }
+      20%, 40%, 60%, 80% { transform: scale(1.02) rotate(-1.5deg); }
+    }
+
+    /* 2. 결과 박스 레이아웃 */
+    .result-box {
+      height: 140px;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* 실제 정답: 위치 고정 및 겹침 방지 */
+    #result {
+      font-size: 90px;
+      line-height: 140px;
+      color: #c62828;
+      font-weight: bold;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      opacity: 0;
+      visibility: hidden;
+      position: absolute;
+      left: 65%; /* 텍스트 오른쪽 공간 확보 */
+      transform: translateX(-50%);
+      z-index: 1;
+    }
+
+    /* 슬롯머신: 2초 동안 돌아가도록 수정 */
+    .main-box:has(button:focus) .result-box::after {
+      content: "??\A 82\A 14\A 55\A 03\A 99\A 37\A ??";
+      white-space: pre;
+      position: absolute;
+      width: 200px;
+      left: 65%; /* 숫자와 동일한 위치 */
+      top: 0;
+      transform: translateX(-50%);
+      color: #c62828;
+      font-size: 90px;
+      font-weight: bold;
+      text-align: center;
+      line-height: 140px;
+      background: rgba(245, 245, 245, 1);
+      visibility: visible;
+      opacity: 1;
+      z-index: 5;
+      /* 애니메이션 끝나는 시간을 2s로 변경 */
+      animation: slotScroll 0.15s infinite, fadeOut 0s forwards 2s;
+    }
+
+    @keyframes slotScroll {
+      0% { transform: translate(-50%, 0); }
+      100% { transform: translate(-50%, -840px); }
+    }
+
+    @keyframes fadeOut {
+      to { opacity: 0; visibility: hidden; display: none; }
+    }
+
+    /* 3. 실제 정답 등장: 2초 뒤에 나타나도록 수정 */
+    .main-box:has(button:focus) #result {
+      animation: finalReveal 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 2s forwards;
+    }
+
+    @keyframes finalReveal {
+      0% { transform: translate(-50%, 20px) scale(0.5); opacity: 0; visibility: visible; }
+      100% { transform: translate(-50%, 0) scale(1); opacity: 1; visibility: visible; }
+    }
+
+    /* 캐릭터 점프 효과 */
+    .main-box:has(button:focus)::before,
+    .main-box:has(button:focus)::after {
+      animation: characterJump 0.4s infinite;
+    }
+
+    @keyframes characterJump {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-40px); }
+    }
+
+    /* 텍스트 레이블 추가 스타일 */
+    .result-label {
+      font-size: 35px;
+      font-weight: bold;
+      color: #333;
+      margin-right: 180px;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="main-box">
+      <div class="problem-box">
+        <input type="number" id="qz-num1" placeholder="문제 번호">
+        <input type="number" id="qz-num2" placeholder="문제 번호">
+        <input type="number" id="qz-num3" placeholder="문제 번호">
+        
+        <button id="button" onclick="
+          const s = document.getElementById('audio-slot'); 
+          const w = document.getElementById('audio-win');
+          s.currentTime = 0; 
+          s.play();
+          setTimeout(() => { 
+            s.pause(); 
+            w.currentTime = 0; 
+            w.play(); 
+          }, 2000);
+        ">체크</button>
+      </div>
+
+      <div class="answer-box">
+        <input type="number" id="qz-answer1" placeholder="답 입력">
+        <input type="number" id="qz-answer2" placeholder="답 입력">
+        <input type="number" id="qz-answer3" placeholder="답 입력">
+      </div>
+
+      <div class="result-box"> 
+        <span class="result-label">오차 평균 :</span>
+        <p id="result"></p>
+      </div> 
+
+      <audio id="audio-slot" src="slot_sound.mp3" preload="auto"></audio>
+      <audio id="audio-win" src="win_sound.mp3" preload="auto"></audio>
+    </div>
+  </div>
+
+  <script>
+    // 각 문제 정답 입력 0은 수정 x (배열은 첫번째 칸이 0이기 떄문),(추가 가능)
+    const problem = [0, 2400, 1100, 1800, 2300, 8600, 1800, 7800, 4800, 1160, 2300, 0, 13500, 8690, 29000, 14000, 14900, 1290000, 0, 0, 419000];
+    // 버튼 불러오기
+    const btn = document.getElementById('button');
+    // 버튼 클릭시 아래 코드 작동
+    btn.addEventListener('click', ()=> {
+      var result = document.getElementById('result');
+      // 퀴즈 문제 번호 불러오기
+      var num = document.getElementById('qz-num1').value;
+      var num2 = document.getElementById('qz-num2').value;
+      var num3 = document.getElementById('qz-num3').value;
+      // 적은 답 불러오기
+      var answer1 = document.getElementById('qz-answer1').value;
+      var answer2 = document.getElementById('qz-answer2').value;
+      var answer3 = document.getElementById('qz-answer3').value;
+      // 퀴즈 문제 번호를 array에 있는 값으로 불러오기
+      problem_prise1 = problem[num];
+      problem_prise2 = problem[num2];
+      problem_prise3 = problem[num3];
+      // 문제가 잘 불러져 왔는지 확인
+      console.log(problem_prise1);
+      console.log(problem_prise2);
+      console.log(problem_prise3);
+      // 정답 뭐 적었는지 확인
+      console.log(answer1);
+      console.log(answer2);
+      console.log(answer3);
+      // 첫번째 문제 계산
+      sum1 = ((problem_prise1 - answer1) / problem_prise1 * 100);
+      sum1 = Math.abs(sum1);
+      sum1 = Math.round(sum1);
+      console.log(sum1);
+      // 두번째 문제 계산
+      sum2 = ((problem_prise2 - answer2) / problem_prise2 * 100);
+      sum2 = Math.abs(sum2);
+      sum2 = Math.round(sum2);
+      console.log(sum2);
+      // 세번째 문제 계산
+      sum3 = ((problem_prise3 - answer3) / problem_prise3 * 100);
+      sum3 = Math.abs(sum3);
+      sum3 = Math.round(sum3);
+      console.log(sum3);
+      // 평균 내기
+      percent = (sum1 + sum2 + sum3) / 3;
+      percent = Math.round(percent);
+      console.log(percent);
+
+      document.getElementById('result').innerText = percent;
+    });
+  </script>
+</body>
+</html>
